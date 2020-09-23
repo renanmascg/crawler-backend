@@ -3,7 +3,7 @@ import { Schema, Document } from 'mongoose';
 export class SearchMetadata extends Document {
   id: number;
   status: string;
-  create_at: string;
+  created_at: string;
   processed_at: string;
 }
 

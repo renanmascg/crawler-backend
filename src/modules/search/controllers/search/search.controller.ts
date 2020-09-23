@@ -9,11 +9,12 @@ export class SearchController {
   @Post('')
   async createGroup(@Req() req: Request, @Res() res: Response) {
     try {
-      const { email, password, name, area, grupo } = req.body;
+      const { empresa, tags, useTagDefault } = req.body;
+      const { id } = req.user;
 
-      const data = await this.searchEnterpriseService.exec();
+      // const data = await this.searchEnterpriseService.exec({});
 
-      return res.json(data);
+      return res.json({ message: 'ok' });
     } catch (e) {
       return res.status(e.status).json({ err: e.message });
     }

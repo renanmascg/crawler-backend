@@ -1,11 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import AppError from 'shared/infra/http/error/appError';
 import { InjectModel } from '@nestjs/mongoose';
-import { User } from 'modules/login/infra/mongo/schemas/users.schema';
+import { User } from 'modules/user/infra/mongo/schemas/users.schema';
 import { Model } from 'mongoose';
 import { hash } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
-import { IUserInterface } from 'modules/login/dtos/IUserInterface';
+import { IUserInterface } from 'modules/user/dtos/IUserInterface';
+import { Preferences } from 'modules/user/infra/mongo/schemas/preferences.schema';
+import IUserPreferences from 'modules/user/dtos/IUserPreferences';
 
 interface IRequestDTO {
   email: string;
@@ -17,12 +19,17 @@ interface IRequestDTO {
 
 interface IResponse {
   user: IUserInterface;
+  preferences: IUserPreferences;
   token: string;
 }
 
 @Injectable()
 export class CreateUserService {
-  constructor(@InjectModel('crw-users') private userModel: Model<User>) {}
+  constructor(
+    @InjectModel('crw-users') private userModel: Model<User>,
+    @InjectModel('crw-preferences')
+    private preferencesModel: Model<Preferences>,
+  ) {}
 
   async exec({
     email,
@@ -57,9 +64,25 @@ export class CreateUserService {
         expiresIn: process.env.EXPIRES_IN,
       });
 
-      return { user: user.toObject(), token };
+      const defaultPreferences = await this.createNewPreferences(user.id);
+
+      return { user: user.toObject(), preferences: defaultPreferences, token };
     } catch (e) {
       throw new Error('Error saving data');
+    }
+  }
+
+  private async createNewPreferences(id: string): Promise<IUserPreferences> {
+    try {
+      const prefDoc = await this.preferencesModel.create({
+        userId: id,
+        tagsDefault: [],
+        urlRemove: [],
+      });
+
+      return prefDoc.toObject();
+    } catch (err) {
+      throw new AppError('Error creating new user default preferences');
     }
   }
 }

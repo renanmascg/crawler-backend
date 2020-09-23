@@ -2,10 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import AppError from 'shared/infra/http/error/appError';
-import { IUserInterface } from 'modules/login/dtos/IUserInterface';
+import { IUserInterface } from 'modules/user/dtos/IUserInterface';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from 'modules/login/infra/mongo/schemas/users.schema';
+import { User } from 'modules/user/infra/mongo/schemas/users.schema';
 
 interface IRequestDTO {
   email: string;

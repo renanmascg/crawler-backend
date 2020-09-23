@@ -1,6 +1,6 @@
 import { Controller, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { CreateGroupService } from 'modules/login/services/create-group/create-group.service';
+import { CreateGroupService } from 'modules/user/services/create-group/create-group.service';
 
 @Controller('group')
 export class CreateGroupController {
