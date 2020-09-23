@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { CreateGroupController } from './controllers/create-group/create-group.controller';
@@ -14,6 +14,8 @@ import { CreateUserService } from './services/create-user/create-user.service';
 import { LoginUserService } from './services/login-user/login-user.service';
 import { UpdatePreferencesService } from './services/update-preferences/update-preferences.service';
 import { CreateGroupService } from './services/create-group/create-group.service';
+import { GetPreferencesService } from './services/get-preferences/get-preferences.service';
+import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticated.middleware';
 
 @Module({
   imports: [
@@ -31,6 +33,16 @@ import { CreateGroupService } from './services/create-group/create-group.service
     ]),
   ],
   controllers: [CreateGroupController, UserController, PreferencesController],
-  providers: [CreateGroupService, CreateUserService, LoginUserService, UpdatePreferencesService],
+  providers: [
+    CreateGroupService,
+    CreateUserService,
+    LoginUserService,
+    UpdatePreferencesService,
+    GetPreferencesService,
+  ],
 })
-export class UserModule {}
+export class UserModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ensureAuthenticated).forRoutes(PreferencesController);
+  }
+}
