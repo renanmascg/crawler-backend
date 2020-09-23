@@ -59,10 +59,16 @@ export class CreateUserService {
         password: hashedPassword,
       });
 
-      const token = sign({}, process.env.JWT_SECRET, {
-        subject: user.id,
-        expiresIn: process.env.EXPIRES_IN,
-      });
+      const token = sign(
+        {
+          groupId: grupo,
+        },
+        process.env.JWT_SECRET,
+        {
+          subject: user.id,
+          expiresIn: process.env.EXPIRES_IN,
+        },
+      );
 
       const defaultPreferences = await this.createNewPreferences(user.id);
 

@@ -41,10 +41,16 @@ export class LoginUserService {
         throw new Error('Incorrect email/password combination.');
       }
 
-      const token = sign({}, process.env.JWT_SECRET, {
-        subject: user.id,
-        expiresIn: process.env.EXPIRES_IN,
-      });
+      const token = sign(
+        {
+          groupId: user.grupo,
+        },
+        process.env.JWT_SECRET,
+        {
+          subject: user.id,
+          expiresIn: process.env.EXPIRES_IN,
+        },
+      );
 
       return { user: userObj, token };
     } catch (e) {

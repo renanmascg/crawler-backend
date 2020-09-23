@@ -6,6 +6,7 @@ interface TokenPayload {
   iat: number;
   exp: number;
   sub: string;
+  groupId: string;
 }
 
 export default function ensureAuthenticated(
@@ -23,9 +24,11 @@ export default function ensureAuthenticated(
     const [, token] = authHeader.split(' ');
     const decoded = verify(token, process.env.JWT_SECRET);
 
-    const { sub } = decoded as TokenPayload;
+    console.log(decoded);
 
-    request.user = { id: sub };
+    const { sub, groupId } = decoded as TokenPayload;
+
+    request.user = { id: sub, grupoId: groupId };
 
     return next();
   } catch {

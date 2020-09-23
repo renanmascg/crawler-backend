@@ -15,6 +15,11 @@ export const SearchEnterpriseSchema = new Schema(
 			ref: 'crw-users',
 			required: true,
     },
+    groupId: {
+      type: Schema.Types.ObjectId,
+			ref: 'crw-group',
+			required: true,
+    },
     search_metadata: {
       type: searchMetadataSchema,
     },
