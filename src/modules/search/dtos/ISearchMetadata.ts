@@ -1,5 +1,5 @@
 export default interface ISearchMetadata {
-  id: number;
+  id: string;
   status: string;
   created_at: string;
   processed_at: string;
