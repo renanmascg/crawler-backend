@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { SearchController } from './controllers/search/search.controller';
 import { SearchEnterpriseService } from './services/search-enterprise/search-enterprise.service';
 import { AccountController } from './controllers/account/account.controller';
@@ -7,6 +7,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SearchEnterpriseSchema } from './infra/mongo/schemas/searchEnterprise.schema';
 import SearchEnterpriseRepository from './repositories/searchEnterpriseRepository';
 import { UserModule } from 'modules/user/user.module';
+import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticated.middleware';
 
 @Module({
   imports: [
@@ -22,4 +23,8 @@ import { UserModule } from 'modules/user/user.module';
     SearchEnterpriseRepository,
   ],
 })
-export class SearchModule {}
+export class SearchModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(ensureAuthenticated).forRoutes(SearchController);
+  }
+}

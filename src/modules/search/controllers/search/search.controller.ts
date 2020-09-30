@@ -9,13 +9,22 @@ export class SearchController {
   @Post('')
   async createGroup(@Req() req: Request, @Res() res: Response) {
     try {
-      const { empresa, tags, useTagDefault } = req.body;
-      const { id } = req.user;
+      const { empresas, tags, useTagsDefault } = req.body;
+      const { id, grupoId } = req.user;
 
-      // const data = await this.searchEnterpriseService.exec({});
+      console.log(req.user);
 
-      return res.json({ message: 'ok' });
+      await this.searchEnterpriseService.exec({
+        userId: id,
+        groupId: grupoId,
+        empresas,
+        tags,
+        useTagsDefault,
+      });
+
+      return res.send();
     } catch (e) {
+      console.error(e);
       return res.status(e.status).json({ err: e.message });
     }
   }

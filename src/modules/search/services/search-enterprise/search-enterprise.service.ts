@@ -16,7 +16,7 @@ interface IRequestDTO {
   groupId: string;
   empresas: string[];
   tags: string[];
-  useTagDefault: boolean;
+  useTagsDefault: boolean;
 }
 
 interface ISaveDatabaseDTO {
@@ -39,14 +39,14 @@ export class SearchEnterpriseService {
     groupId,
     empresas,
     tags,
-    useTagDefault,
+    useTagsDefault,
   }: IRequestDTO): Promise<void> {
     if (
       !userId ||
       !groupId ||
       !empresas ||
       !tags ||
-      useTagDefault === undefined
+      useTagsDefault === undefined
     ) {
       throw new AppError('Mandatory variables missing');
     }
@@ -55,12 +55,13 @@ export class SearchEnterpriseService {
 
     const preferences = await this.getUserPreferences(userId);
 
-    if (useTagDefault) {
+    if (useTagsDefault) {
       appTags.push(...preferences.tagsDefault);
+      appTags = appTags.map(v => v.toUpperCase());
       appTags = [...new Set(appTags)];
     }
 
-    const params = this.buildParams(empresas, tags);
+    const params = this.buildParams(empresas, appTags);
 
     const requests = params.map(param => {
       return api.get<ISerpResponse>('/search', {
@@ -80,8 +81,8 @@ export class SearchEnterpriseService {
   private buildParams(empresas: string[], tags: string[]): IQueryInterface[] {
     const sendQuery = [];
 
-    for (let i = 1; i < empresas.length; i++) {
-      for (let j = 1; j < tags.length; j++) {
+    for (let i = 0; i < empresas.length; i++) {
+      for (let j = 0; j < tags.length; j++) {
         sendQuery.push(
           this.buildQueryParams(
             `"${empresas[i].toUpperCase()}" + "${tags[j].toUpperCase()}"`,
@@ -94,9 +95,14 @@ export class SearchEnterpriseService {
   }
 
   private async getUserPreferences(userId: string): Promise<IUserPreferences> {
-    const preferences = await this.preferencesModel.findOne({ userId });
+    try {
+      const preferences = await this.preferencesModel.findOne({ userId });
 
-    return preferences.toObject();
+      return preferences.toObject();
+    } catch (e) {
+      console.error(e);
+      throw new AppError('Error consulting user preferences');
+    }
   }
 
   private buildQueryParams(query: string): IQueryInterface {
@@ -119,15 +125,20 @@ export class SearchEnterpriseService {
     groupId,
     responses,
   }: ISaveDatabaseDTO): Promise<void> {
-    const saveList: ISearchEnterprise[] = responses.map(res => {
-      return {
-        apiId: res.data.search_metadata.id,
-        groupId,
-        search_metadata: res.data.search_metadata,
-        userId,
-      };
-    });
+    try {
+      const saveList: ISearchEnterprise[] = responses.map(res => {
+        return {
+          apiId: res.data.search_metadata.id,
+          groupId,
+          search_metadata: res.data.search_metadata,
+          userId,
+        };
+      });
 
-    await this.enterpriseSearchModel.create(saveList);
+      await this.enterpriseSearchModel.create(saveList);
+    } catch (e) {
+      console.error(e);
+      throw new AppError('Error saving search api into database');
+    }
   }
 }
