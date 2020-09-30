@@ -1,6 +1,133 @@
 import { Injectable } from '@nestjs/common';
+import AppError from 'shared/infra/http/error/appError';
+import { api } from 'modules/search/infra/http/api';
+import IQueryInterface from 'modules/search/dtos/IQueryParams';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Preferences } from 'modules/user/infra/mongo/schemas/preferences.schema';
+import IUserPreferences from 'modules/user/dtos/IUserPreferences';
+import { AxiosResponse } from 'axios';
+import { SearchEnterprise } from 'modules/search/infra/mongo/schemas/searchEnterprise.schema';
+import ISerpResponse from 'modules/search/dtos/ISerpResponse';
+import ISearchEnterprise from 'modules/search/dtos/ISearchEnterprise';
+
+interface IRequestDTO {
+  userId: string;
+  groupId: string;
+  empresas: string[];
+  tags: string[];
+  useTagDefault: boolean;
+}
+
+interface ISaveDatabaseDTO {
+  userId: string;
+  groupId: string;
+  responses: AxiosResponse<ISerpResponse>[];
+}
 
 @Injectable()
 export class SearchEnterpriseService {
-  async exec(): Promise<void> {}
+  constructor(
+    @InjectModel('crw-preferences')
+    private preferencesModel: Model<Preferences>,
+    @InjectModel('crw-enterprise-search')
+    private enterpriseSearchModel: Model<SearchEnterprise>,
+  ) {}
+
+  async exec({
+    userId,
+    groupId,
+    empresas,
+    tags,
+    useTagDefault,
+  }: IRequestDTO): Promise<void> {
+    if (
+      !userId ||
+      !groupId ||
+      !empresas ||
+      !tags ||
+      useTagDefault === undefined
+    ) {
+      throw new AppError('Mandatory variables missing');
+    }
+
+    let appTags = [...tags];
+
+    const preferences = await this.getUserPreferences(userId);
+
+    if (useTagDefault) {
+      appTags.push(...preferences.tagsDefault);
+      appTags = [...new Set(appTags)];
+    }
+
+    const params = this.buildParams(empresas, tags);
+
+    const requests = params.map(param => {
+      return api.get<ISerpResponse>('/search', {
+        params: param,
+      });
+    });
+
+    const responses = await Promise.all(requests);
+
+    await this.saveDatabase({
+      userId,
+      groupId,
+      responses,
+    });
+  }
+
+  private buildParams(empresas: string[], tags: string[]): IQueryInterface[] {
+    const sendQuery = [];
+
+    for (let i = 1; i < empresas.length; i++) {
+      for (let j = 1; j < tags.length; j++) {
+        sendQuery.push(
+          this.buildQueryParams(
+            `"${empresas[i].toUpperCase()}" + "${tags[j].toUpperCase()}"`,
+          ),
+        );
+      }
+    }
+
+    return sendQuery;
+  }
+
+  private async getUserPreferences(userId: string): Promise<IUserPreferences> {
+    const preferences = await this.preferencesModel.findOne({ userId });
+
+    return preferences.toObject();
+  }
+
+  private buildQueryParams(query: string): IQueryInterface {
+    return {
+      q: query,
+      engine: 'google',
+      location: 'Brazil',
+      google_domain: 'google.com.br',
+      tbs: 'cdr:1,cd_min:1/1/2017',
+      gl: 'br',
+      hl: 'pt',
+      num: '40',
+      filter: '0',
+      nfpr: '1',
+    };
+  }
+
+  private async saveDatabase({
+    userId,
+    groupId,
+    responses,
+  }: ISaveDatabaseDTO): Promise<void> {
+    const saveList: ISearchEnterprise[] = responses.map(res => {
+      return {
+        apiId: res.data.search_metadata.id,
+        groupId,
+        search_metadata: res.data.search_metadata,
+        userId,
+      };
+    });
+
+    await this.enterpriseSearchModel.create(saveList);
+  }
 }
