@@ -16,6 +16,11 @@ import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticate
     ]),
     UserModule,
   ],
+  exports: [
+    MongooseModule.forFeature([
+      { name: 'crw-enterprise-search', schema: SearchEnterpriseSchema },
+    ])
+  ],
   controllers: [SearchController, AccountController],
   providers: [
     SearchEnterpriseService,
