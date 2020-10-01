@@ -14,7 +14,7 @@ export class SearchController {
 
       console.log(req.user);
 
-      await this.searchEnterpriseService.exec({
+      const enterprises = await this.searchEnterpriseService.exec({
         userId: id,
         groupId: grupoId,
         empresas,
@@ -22,7 +22,7 @@ export class SearchController {
         useTagsDefault,
       });
 
-      return res.send();
+      return res.json(enterprises);
     } catch (e) {
       console.error(e);
       return res.status(e.status).json({ err: e.message });

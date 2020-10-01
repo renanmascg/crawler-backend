@@ -1,6 +1,8 @@
 export default interface IQueryInterface {
   engine: string;
   q: string;
+  api_key: string;
+  async?: boolean;
   location?: string;
   tbs?: string;
   google_domain?: string;

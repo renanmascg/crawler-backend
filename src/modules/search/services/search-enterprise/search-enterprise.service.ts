@@ -40,7 +40,7 @@ export class SearchEnterpriseService {
     empresas,
     tags,
     useTagsDefault,
-  }: IRequestDTO): Promise<void> {
+  }: IRequestDTO): Promise<SearchEnterprise[]> {
     if (
       !userId ||
       !groupId ||
@@ -63,19 +63,15 @@ export class SearchEnterpriseService {
 
     const params = this.buildParams(empresas, appTags);
 
-    const requests = params.map(param => {
-      return api.get<ISerpResponse>('/search', {
-        params: param,
-      });
-    });
+    const responses = await this.makeRequests(params);
 
-    const responses = await Promise.all(requests);
-
-    await this.saveDatabase({
+    const enterprises = await this.saveDatabase({
       userId,
       groupId,
       responses,
     });
+
+    return enterprises;
   }
 
   private buildParams(empresas: string[], tags: string[]): IQueryInterface[] {
@@ -109,6 +105,8 @@ export class SearchEnterpriseService {
     return {
       q: query,
       engine: 'google',
+      async: true,
+      api_key: process.env.API_KEY,
       location: 'Brazil',
       google_domain: 'google.com.br',
       tbs: 'cdr:1,cd_min:1/1/2017',
@@ -120,11 +118,28 @@ export class SearchEnterpriseService {
     };
   }
 
+  private async makeRequests(
+    params: IQueryInterface[],
+  ): Promise<AxiosResponse<ISerpResponse>[]> {
+    try {
+      const requests = params.map(param => {
+        return api.get<ISerpResponse>('/search', {
+          params: param,
+        });
+      });
+
+      return await Promise.all(requests);
+    } catch (e) {
+      console.error(e);
+      throw new AppError('Error sending requests');
+    }
+  }
+
   private async saveDatabase({
     userId,
     groupId,
     responses,
-  }: ISaveDatabaseDTO): Promise<void> {
+  }: ISaveDatabaseDTO): Promise<SearchEnterprise[]> {
     try {
       const saveList: ISearchEnterprise[] = responses.map(res => {
         return {
@@ -135,7 +150,8 @@ export class SearchEnterpriseService {
         };
       });
 
-      await this.enterpriseSearchModel.create(saveList);
+      const enterprises = await this.enterpriseSearchModel.create(saveList);
+      return enterprises;
     } catch (e) {
       console.error(e);
       throw new AppError('Error saving search api into database');
