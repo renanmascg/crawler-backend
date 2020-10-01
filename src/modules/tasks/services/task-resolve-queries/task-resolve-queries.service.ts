@@ -85,7 +85,6 @@ export class TaskResolveQueriesService {
   ): Promise<void> {
     try {
       const listUpdate = responses.map(res => {
-        console.log(res.data);
         return this.enterpriseSearchModel.findOneAndUpdate(
           {
             apiId: res.data.search_metadata.id,
