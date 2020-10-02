@@ -17,7 +17,7 @@ export class TaskResolveQueriesService {
     private enterpriseSearchModel: Model<SearchEnterprise>,
   ) {}
 
-  @Cron('* */30 * * * *')
+  @Cron('0 */30 * * * *')
   async handleCron() {
     try {
       const enterprises = await this.getAllEnterprisesQueued();
