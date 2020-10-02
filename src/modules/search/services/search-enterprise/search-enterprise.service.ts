@@ -81,7 +81,7 @@ export class SearchEnterpriseService {
       for (let j = 0; j < tags.length; j++) {
         sendQuery.push(
           this.buildQueryParams(
-            `"${empresas[i].toUpperCase()}" + "${tags[j].toUpperCase()}"`,
+            `\"${empresas[i].toUpperCase()}\" + \"${tags[j].toUpperCase()}\"`,
           ),
         );
       }
@@ -107,14 +107,14 @@ export class SearchEnterpriseService {
       engine: 'google',
       async: true,
       api_key: process.env.API_KEY,
-      location: 'Brazil',
-      google_domain: 'google.com.br',
-      tbs: 'cdr:1,cd_min:1/1/2017',
-      gl: 'br',
-      hl: 'pt',
+      google_domain: 'google.com',
+      tbs: 'cdr:1,cd_min:1/1/2017,li:1',
+      hl: 'br',
+      gl: 'us',
       num: '40',
       filter: '0',
       nfpr: '1',
+      device: 'desktop',
     };
   }
 

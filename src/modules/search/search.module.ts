@@ -7,6 +7,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SearchEnterpriseSchema } from './infra/mongo/schemas/searchEnterprise.schema';
 import SearchEnterpriseRepository from './repositories/searchEnterpriseRepository';
 import { UserModule } from 'modules/user/user.module';
+import { GetUserSearchService } from './services/get-user-search/get-user-search.service';
+import { GetSearchInfoService } from './services/get-search-info/get-search-info.service';
 import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticated.middleware';
 
 @Module({
@@ -26,6 +28,8 @@ import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticate
     SearchEnterpriseService,
     GetAccountInfoService,
     SearchEnterpriseRepository,
+    GetUserSearchService,
+    GetSearchInfoService,
   ],
 })
 export class SearchModule implements NestModule {

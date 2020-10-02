@@ -11,4 +11,5 @@ export default interface IQueryInterface {
   num?: string;
   filter?: string;
   nfpr?: string;
+  device?: string;
 }
