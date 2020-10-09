@@ -10,6 +10,8 @@ import { AxiosResponse } from 'axios';
 import { SearchEnterprise } from 'modules/search/infra/mongo/schemas/searchEnterprise.schema';
 import ISerpResponse from 'modules/search/dtos/ISerpResponse';
 import ISearchEnterprise from 'modules/search/dtos/ISearchEnterprise';
+import { Enterprise } from 'modules/search/infra/mongo/schemas/enterprises.schema';
+import IEnterprise from 'modules/search/dtos/IEnterprise';
 
 interface IRequestDTO {
   userId: string;
@@ -19,10 +21,16 @@ interface IRequestDTO {
   useTagsDefault: boolean;
 }
 
-interface ISaveDatabaseDTO {
+interface ISaveEnterpriseDatabaseDTO {
   userId: string;
   groupId: string;
+  enterprises: string[];
+  tags: string[];
+}
+
+interface ISaveDatabaseDTO {
   responses: AxiosResponse<ISerpResponse>[];
+  enterprises: Enterprise[];
 }
 
 @Injectable()
@@ -32,6 +40,8 @@ export class SearchEnterpriseService {
     private preferencesModel: Model<Preferences>,
     @InjectModel('crw-enterprise-search')
     private enterpriseSearchModel: Model<SearchEnterprise>,
+    @InjectModel('crw-enterprise')
+    private enterpriseModel: Model<Enterprise>,
   ) {}
 
   async exec({
@@ -61,17 +71,23 @@ export class SearchEnterpriseService {
       appTags = [...new Set(appTags)];
     }
 
+    const enterprises = await this.saveEnterpriseDatabase({
+      userId,
+      groupId,
+      tags: appTags,
+      enterprises: empresas,
+    });
+
     const params = this.buildParams(empresas, appTags);
 
     const responses = await this.makeRequests(params);
 
-    const enterprises = await this.saveDatabase({
-      userId,
-      groupId,
+    const queries = await this.saveDatabase({
       responses,
+      enterprises,
     });
 
-    return enterprises;
+    return queries;
   }
 
   private buildParams(empresas: string[], tags: string[]): IQueryInterface[] {
@@ -135,23 +151,52 @@ export class SearchEnterpriseService {
     }
   }
 
-  private async saveDatabase({
+  private async saveEnterpriseDatabase({
     userId,
     groupId,
-    responses,
-  }: ISaveDatabaseDTO): Promise<SearchEnterprise[]> {
+    enterprises,
+    tags,
+  }: ISaveEnterpriseDatabaseDTO): Promise<Enterprise[]> {
     try {
-      const saveList: ISearchEnterprise[] = responses.map(res => {
+      const enterprisesModel: IEnterprise[] = enterprises.map(ent => {
         return {
-          apiId: res.data.search_metadata.id,
+          name: ent.toUpperCase(),
+          status: 'Queued',
           groupId,
-          search_metadata: res.data.search_metadata,
           userId,
+          tags,
         };
       });
 
-      const enterprises = await this.enterpriseSearchModel.create(saveList);
-      return enterprises;
+      const saveEnterprises = await this.enterpriseModel.create(
+        enterprisesModel,
+      );
+
+      return saveEnterprises;
+    } catch (e) {}
+  }
+
+  private async saveDatabase({
+    responses,
+    enterprises,
+  }: ISaveDatabaseDTO): Promise<SearchEnterprise[]> {
+    try {
+      const saveList: ISearchEnterprise[] = responses.map(res => {
+        const ent = enterprises.find(item =>
+          res.data.search_parameters.q.includes(item.name.toUpperCase()),
+        );
+
+        return {
+          apiId: res.data.search_metadata.id,
+          enterpriseId: ent.id,
+          search_metadata: res.data.search_metadata,
+        };
+      });
+
+      const enterprisesSearch = await this.enterpriseSearchModel.create(
+        saveList,
+      );
+      return enterprisesSearch;
     } catch (e) {
       console.error(e);
       throw new AppError('Error saving search api into database');
