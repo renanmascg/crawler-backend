@@ -6,8 +6,7 @@ import IOrganicResult from 'modules/search/dtos/IOrganicResult';
 
 export class SearchEnterprise extends Document {
   apiId: string;
-  userId: string;
-  groupId: string;
+  enterpriseId: string;
   search_metadata: ISearchMetadata;
   organic_result?: IOrganicResult[];
 }
@@ -18,14 +17,9 @@ export const SearchEnterpriseSchema = new Schema(
       type: String,
       required: true,
     },
-    userId: {
+    enterpriseId: {
       type: Schema.Types.ObjectId,
-      ref: 'crw-users',
-      required: true,
-    },
-    groupId: {
-      type: Schema.Types.ObjectId,
-      ref: 'crw-group',
+      ref: 'crw-enterprise',
       required: true,
     },
     search_metadata: {

@@ -10,17 +10,20 @@ import { UserModule } from 'modules/user/user.module';
 import { GetUserSearchService } from './services/get-user-search/get-user-search.service';
 import { GetSearchInfoService } from './services/get-search-info/get-search-info.service';
 import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticated.middleware';
+import { EnterpriseSchema } from './infra/mongo/schemas/enterprises.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: 'crw-enterprise-search', schema: SearchEnterpriseSchema },
+      { name: 'crw-enterprise', schema: EnterpriseSchema },
     ]),
     UserModule,
   ],
   exports: [
     MongooseModule.forFeature([
       { name: 'crw-enterprise-search', schema: SearchEnterpriseSchema },
+      { name: 'crw-enterprise', schema: EnterpriseSchema },
     ])
   ],
   controllers: [SearchController, AccountController],
