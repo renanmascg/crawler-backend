@@ -7,6 +7,8 @@ import ISearchArchive from 'modules/tasks/dtos/ISearchArchive';
 import { api } from 'modules/search/infra/http/api';
 import ISerpResponse from 'modules/search/dtos/ISerpResponse';
 import { AxiosResponse } from 'axios';
+import { Enterprise } from 'modules/search/infra/mongo/schemas/enterprises.schema';
+import { Console } from 'console';
 
 @Injectable()
 export class TaskResolveQueriesService {
@@ -15,6 +17,8 @@ export class TaskResolveQueriesService {
   constructor(
     @InjectModel('crw-enterprise-search')
     private enterpriseSearchModel: Model<SearchEnterprise>,
+    @InjectModel('crw-enterprise')
+    private enterpriseModel: Model<Enterprise>,
   ) {}
 
   @Cron('0 */30 * * * *')
@@ -33,7 +37,9 @@ export class TaskResolveQueriesService {
 
       await this.updateDatabase(responses);
 
-      this.logger.log('==========PROCESS ENDED SUCCESSFULYY==========')
+      await this.updateEnterpriseDatabase();
+
+      this.logger.log('==========PROCESS ENDED SUCCESSFULLY==========');
     } catch (error) {
       this.logger.error(
         '==========ERRO OCURRED TRYING TO SOLVE QUERY SEARCH==========',
@@ -102,6 +108,38 @@ export class TaskResolveQueriesService {
         `ERROR UPDATING DATABASE WITH QUERIED DATA\nERROR: \n${e}`,
       );
       throw Error('ERROR ON: saveDatabase');
+    }
+  }
+
+  private async updateEnterpriseDatabase(): Promise<void> {
+    try {
+      const queuedEnterprises = await this.enterpriseModel.find({
+        status: 'Queued',
+      });
+
+      for (let i = 0; i < queuedEnterprises.length; i++) {
+        const ent = queuedEnterprises[i];
+
+        const stillQueued = await this.enterpriseSearchModel.find({
+          enterpriseId: ent.id,
+          $or: [
+            { 'search_metadata.status': 'Queued' },
+            { 'search_metadata.status': 'Processing' },
+          ],
+        });
+
+        if (stillQueued.length === 0) {
+          await this.enterpriseModel.findOneAndUpdate(
+            { _id: ent.id },
+            {
+              status: 'Success',
+            },
+          );
+        }
+      }
+    } catch (e) {
+      this.logger.error(`ERROR UPDATING ENTERPRISE DATABASE\nERROR:${e}`);
+      throw Error('ERROR ON: updateEnterpriseDatabase');
     }
   }
 }
