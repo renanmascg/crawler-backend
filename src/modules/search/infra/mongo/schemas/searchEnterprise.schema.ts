@@ -3,6 +3,7 @@ import { searchMetadataSchema } from './searchMetadata.schema';
 import { organicResultSchema } from './organicResult.schema';
 import ISearchMetadata from 'modules/search/dtos/ISearchMetadata';
 import IOrganicResult from 'modules/search/dtos/IOrganicResult';
+import { searchParameters } from './searchParameters.schema';
 
 export class SearchEnterprise extends Document {
   apiId: string;
@@ -22,12 +23,15 @@ export const SearchEnterpriseSchema = new Schema(
       ref: 'crw-enterprise',
       required: true,
     },
+    search_parameters: {
+      type: searchParameters
+    },
     search_metadata: {
       type: searchMetadataSchema,
     },
     organic_result: {
       type: [organicResultSchema],
-    },
+    }
   },
   {
     timestamps: true,

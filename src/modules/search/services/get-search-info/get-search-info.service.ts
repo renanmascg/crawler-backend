@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import AppError from 'shared/infra/http/error/appError';
 
 interface IResponseDTO {
-  enterprise: SearchEnterprise;
+  enterprises: SearchEnterprise[];
 }
 
 @Injectable()
@@ -22,22 +22,22 @@ export class GetSearchInfoService {
       throw new AppError('Mandatory Variables not sent');
     }
 
-    const enterprise = await this.getEnterpriseInfo(infoId);
+    const enterprises = await this.getEnterpriseInfo(infoId);
 
-    if (!enterprise) {
+    if (!enterprises) {
       throw new AppError('Info not available.')
     }
 
     return {
-      enterprise,
+      enterprises,
     };
   }
 
-  private async getEnterpriseInfo(infoId: string): Promise<SearchEnterprise> {
+  private async getEnterpriseInfo(infoId: string): Promise<SearchEnterprise[]> {
     try {
-      const enterprise = await this.enterpriseSearchModel.findOne({ _id: infoId });
+      const enterprises = await this.enterpriseSearchModel.find({ enterpriseId: infoId });
 
-      return enterprise;
+      return enterprises;
     } catch (e) {
       this.logger.error(e);
       throw new AppError('Error getting enterprises consulted by the user');

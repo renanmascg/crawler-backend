@@ -16,4 +16,8 @@ export const organicResultSchema = new Schema({
   snippet: {
     type: String,
   },
+  isGood: {
+    type: Boolean,
+    default: null,
+  }
 });

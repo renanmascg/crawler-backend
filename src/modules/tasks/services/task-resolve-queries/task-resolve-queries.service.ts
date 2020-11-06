@@ -8,7 +8,6 @@ import { api } from 'modules/search/infra/http/api';
 import ISerpResponse from 'modules/search/dtos/ISerpResponse';
 import { AxiosResponse } from 'axios';
 import { Enterprise } from 'modules/search/infra/mongo/schemas/enterprises.schema';
-import { Console } from 'console';
 
 @Injectable()
 export class TaskResolveQueriesService {
@@ -21,7 +20,7 @@ export class TaskResolveQueriesService {
     private enterpriseModel: Model<Enterprise>,
   ) {}
 
-  @Cron('0 */30 * * * *')
+  @Cron('0 */20 * * * *')
   async handleCron() {
     try {
       const enterprises = await this.getAllEnterprisesQueued();
@@ -96,6 +95,7 @@ export class TaskResolveQueriesService {
             apiId: res.data.search_metadata.id,
           },
           {
+            search_parameters: res.data.search_parameters,
             search_metadata: res.data.search_metadata,
             organic_result: res.data.organic_results,
           },
