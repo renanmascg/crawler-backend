@@ -1,4 +1,4 @@
-import { Controller, Post, Res, Req } from '@nestjs/common';
+import { Controller, Post, Get, Res, Req } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { CreateUserService } from 'modules/user/services/create-user/create-user.service';
 import { LoginUserService } from 'modules/user/services/login-user/login-user.service';
@@ -47,5 +47,10 @@ export class UserController {
     } catch (e) {
       return res.status(e.status).json({ err: e.message });
     }
+  }
+
+  @Get('/validate-token')
+  async validateToken(@Req() req: Request, @Res() res: Response) {
+    return res.send();
   }
 }

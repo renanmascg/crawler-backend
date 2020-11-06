@@ -24,8 +24,6 @@ export default function ensureAuthenticated(
     const [, token] = authHeader.split(' ');
     const decoded = verify(token, process.env.JWT_SECRET);
 
-    console.log(decoded);
-
     const { sub, groupId } = decoded as TokenPayload;
 
     request.user = { id: sub, grupoId: groupId };

@@ -1,4 +1,4 @@
-import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { CreateGroupController } from './controllers/create-group/create-group.controller';
@@ -43,6 +43,6 @@ import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticate
 })
 export class UserModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(ensureAuthenticated).forRoutes(PreferencesController);
+    consumer.apply(ensureAuthenticated).forRoutes(PreferencesController,'/user/validate-token');
   }
 }

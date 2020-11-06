@@ -19,7 +19,7 @@ class SearchEnterpriseRepository {
       console.error(e);
       throw new AppError('Erro salvando no banco de dados do search enterprise model');
     }
-    
+
   }
 }
 
