@@ -11,6 +11,7 @@ import { GetUserSearchService } from './services/get-user-search/get-user-search
 import { GetSearchInfoService } from './services/get-search-info/get-search-info.service';
 import ensureAuthenticated from 'shared/infra/http/middleware/ensureAuthenticated.middleware';
 import { EnterpriseSchema } from './infra/mongo/schemas/enterprises.schema';
+import { UpdateOrganicResultsService } from './services/update-organic-results/update-organic-results.service';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { EnterpriseSchema } from './infra/mongo/schemas/enterprises.schema';
     SearchEnterpriseRepository,
     GetUserSearchService,
     GetSearchInfoService,
+    UpdateOrganicResultsService,
   ],
 })
 export class SearchModule implements NestModule {
